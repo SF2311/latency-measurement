@@ -36,7 +36,7 @@
 
 #define TAG "main"
 
-extern struct timeval start_time;
+extern struct timeval start_time[3];
 void app_main(void)
 {
     // Initialize NVS
@@ -54,15 +54,24 @@ void app_main(void)
     setup_timing();
 
     ESP_LOGI(TAG, "Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
-
+    TickType_t delay = configTICK_RATE_HZ; // should be 1 second
     char cnt = 0;
-    gettimeofday(&start_time, NULL);
+    TickType_t lastWakeTime = xTaskGetTickCount();
     while (1)
     {
+        // vTaskDelayUntil also updates the lastWakeTime accordingly
+        vTaskDelayUntil(&lastWakeTime, delay);
         ESP_LOGI(TAG, "cnt: %d\n", cnt);
         cnt = (cnt + 1) % 2;
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        gettimeofday(&start_time, NULL);
-        gpio_set_level(GPIO_OUTPUT_IO, cnt);
+        gettimeofday(start_time, NULL);
+        // We trigger the edge with a sligt delay, to (hopefully) achive some spacing between the interrupts
+        // This will not affect the overall period of this loop, since this is achived through an absolute delay interval
+        gpio_set_level(GPIO_OUTPUT_IO_0, cnt);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        gettimeofday(start_time + 1, NULL);
+        gpio_set_level(GPIO_OUTPUT_IO_1, cnt);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        gettimeofday(start_time + 2, NULL);
+        gpio_set_level(GPIO_OUTPUT_IO_2, cnt);
     }
 }
