@@ -23,7 +23,7 @@
 #define TAG "TIMING"
 
 static QueueHandle_t gpio_evt_queue = NULL;
-struct timeval start_time[3];
+struct timeval start_time[NUM_IO_CHANNELS];
 
 static void IRAM_ATTR gpio_isr_handler(void *arg)
 {
@@ -131,4 +131,5 @@ void setup_timing()
     gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void *)0);
     gpio_isr_handler_add(GPIO_INPUT_IO_1, gpio_isr_handler, (void *)1);
     gpio_isr_handler_add(GPIO_INPUT_IO_2, gpio_isr_handler, (void *)2);
+    gpio_isr_handler_add(GPIO_INPUT_IO_3, gpio_isr_handler, (void *)3);
 }

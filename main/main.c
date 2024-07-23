@@ -34,6 +34,29 @@
  *
  */
 
+/**
+ * PIN Mapping NORVI IIOT-AE01-T
+ *
+ * Digital Input 0 – GPIO18
+ * Digital Input 1 – GPIO39
+ * Digital Input 2 – GPIO34
+ * Digital Input 3 – GPIO35
+ * Digital Input 4 – GPIO19
+ * Digital Input 5 – GPIO21
+ * Digital Input 6 – GPIO22
+ * Digital Input 7 – GPIO23
+ *
+ *
+ * T0.1 – GPIO26
+ * T0.0 – GPI027
+ * T0 – GPI014
+ * T1 – GPI012
+ * T2 – GPI013
+ * T3 – GPI015
+ * T4 – GPI02
+ * T5 – GPI033
+ */
+
 #define TAG "main"
 
 extern struct timeval start_time[3];
@@ -73,5 +96,8 @@ void app_main(void)
         vTaskDelay(100 / portTICK_PERIOD_MS);
         gettimeofday(start_time + 2, NULL);
         gpio_set_level(GPIO_OUTPUT_IO_2, cnt);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        gettimeofday(start_time + 3, NULL);
+        gpio_set_level(GPIO_OUTPUT_IO_3, cnt);
     }
 }
