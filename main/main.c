@@ -26,6 +26,7 @@
 
 #include "timing.h"
 #include "wifi.h"
+#include "display.h"
 
 /**
  * Brief:
@@ -60,6 +61,7 @@
 #define TAG "main"
 
 extern struct timeval start_time[3];
+
 void app_main(void)
 {
     // Initialize NVS
@@ -75,6 +77,8 @@ void app_main(void)
     wifi_init_sta();
 
     setup_timing();
+
+    setup_display();
 
     ESP_LOGI(TAG, "Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
     TickType_t delay = configTICK_RATE_HZ; // should be 1 second

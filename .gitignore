@@ -2,3 +2,4 @@ sdkconfig*
 build/
 .vscode/
 .devcontainer/
+managed_components/
