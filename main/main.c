@@ -27,6 +27,7 @@
 #include "timing.h"
 #include "wifi.h"
 #include "display.h"
+#include "buttons.h"
 
 /**
  * Brief:
@@ -106,10 +107,13 @@ void app_main(void)
 
     setup_display();
 
+    start_button_handler();
+
     ESP_LOGI(TAG, "Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
     TickType_t delay = configTICK_RATE_HZ; // should be 1 second
     char cnt = 0;
     TickType_t lastWakeTime = xTaskGetTickCount();
+
     while (1)
     {
         // vTaskDelayUntil also updates the lastWakeTime accordingly
