@@ -2,6 +2,7 @@
 #define TIMING_H
 
 #include <stddef.h>
+#include <time.h>
 
 // the output pin defined in menuconfig
 #define GPIO_OUTPUT_IO_0 CONFIG_GPIO_OUTPUT_0
@@ -34,6 +35,12 @@ typedef struct _delay_data
     uint32_t pin;
     long duration;
 } delay_data;
+
+typedef struct _channel_gate
+{
+    bool locked;
+    struct timeval time;
+} channel_gate;
 
 void setup_timing(void);
 

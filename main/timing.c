@@ -24,6 +24,7 @@
 
 static QueueHandle_t gpio_evt_queue = NULL;
 struct timeval start_time[NUM_IO_CHANNELS];
+channel_gate channel_gates[NUM_IO_CHANNELS];
 
 static void IRAM_ATTR gpio_isr_handler(void *arg)
 {

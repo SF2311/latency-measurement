@@ -60,7 +60,33 @@
 
 #define TAG "main"
 
-extern struct timeval start_time[3];
+extern struct timeval start_time[NUM_IO_CHANNELS];
+extern channel_gate channel_gates[NUM_IO_CHANNELS];
+
+struct timeval current_time;
+
+int pin_mapping[NUM_IO_CHANNELS] = {GPIO_OUTPUT_IO_0, GPIO_OUTPUT_IO_1, GPIO_OUTPUT_IO_2, GPIO_OUTPUT_IO_3};
+
+void trigger_channel(int channel_nr, int level)
+{
+    // "unlock" the channel after timeout
+    if (TIME_US(current_time) - TIME_US(channel_gates[0].time) < 5000000)
+    {
+        channel_gates[channel_nr].locked = false;
+    }
+
+    // "lock" the channel to prevent a new edge from being generated before the current one is received back
+    if (!channel_gates[channel_nr].locked)
+    {
+        gettimeofday(start_time + channel_nr, NULL);
+        channel_gates[channel_nr].locked = true;
+        gettimeofday(&(channel_gates[channel_nr].time), NULL);
+        // We trigger the edge with a sligt delay, to (hopefully) achive some spacing between the interrupts
+        // This will not affect the overall period of this loop, since this is achived through an absolute delay interval
+        gpio_set_level(pin_mapping[channel_nr], level);
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
 
 void app_main(void)
 {
@@ -90,18 +116,9 @@ void app_main(void)
         vTaskDelayUntil(&lastWakeTime, delay);
         ESP_LOGI(TAG, "cnt: %d\n", cnt);
         cnt = (cnt + 1) % 2;
-        gettimeofday(start_time, NULL);
-        // We trigger the edge with a sligt delay, to (hopefully) achive some spacing between the interrupts
-        // This will not affect the overall period of this loop, since this is achived through an absolute delay interval
-        gpio_set_level(GPIO_OUTPUT_IO_0, cnt);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-        gettimeofday(start_time + 1, NULL);
-        gpio_set_level(GPIO_OUTPUT_IO_1, cnt);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-        gettimeofday(start_time + 2, NULL);
-        gpio_set_level(GPIO_OUTPUT_IO_2, cnt);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-        gettimeofday(start_time + 3, NULL);
-        gpio_set_level(GPIO_OUTPUT_IO_3, cnt);
+        for (int i = 0; i < NUM_IO_CHANNELS; ++i)
+        {
+            trigger_channel(i, cnt);
+        }
     }
 }
