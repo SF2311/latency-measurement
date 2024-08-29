@@ -68,24 +68,25 @@ struct timeval current_time;
 
 int pin_mapping[NUM_IO_CHANNELS] = {GPIO_OUTPUT_IO_0, GPIO_OUTPUT_IO_1, GPIO_OUTPUT_IO_2, GPIO_OUTPUT_IO_3};
 
-void trigger_channel(int channel_nr, int level)
+void trigger_channel(int channel_nr)
 {
+    gettimeofday(&current_time, NULL);
     // "unlock" the channel after timeout
-    if (TIME_US(current_time) - TIME_US(channel_gates[0].time) < 5000000)
+    if (TIME_US(current_time) - TIME_US(channel_gates[channel_nr].time) > 5000000)
     {
+        ESP_LOGI(TAG, "Unlocking channel %d", channel_nr);
         channel_gates[channel_nr].locked = false;
     }
 
     // "lock" the channel to prevent a new edge from being generated before the current one is received back
     if (!channel_gates[channel_nr].locked)
     {
-        gettimeofday(start_time + channel_nr, NULL);
+        uint32_t level = (gpio_get_level(pin_mapping[channel_nr]) + 1) % 2;
+        gettimeofday(&(start_time[channel_nr]), NULL);
         channel_gates[channel_nr].locked = true;
         gettimeofday(&(channel_gates[channel_nr].time), NULL);
-        // We trigger the edge with a sligt delay, to (hopefully) achive some spacing between the interrupts
-        // This will not affect the overall period of this loop, since this is achived through an absolute delay interval
         gpio_set_level(pin_mapping[channel_nr], level);
-        vTaskDelay(pdMS_TO_TICKS(100));
+        ESP_LOGI(TAG, "Set channel %d to %d", channel_nr, channel_nr);
     }
 }
 
@@ -119,10 +120,12 @@ void app_main(void)
         // vTaskDelayUntil also updates the lastWakeTime accordingly
         vTaskDelayUntil(&lastWakeTime, delay);
         ESP_LOGI(TAG, "cnt: %d\n", cnt);
-        cnt = (cnt + 1) % 2;
         for (int i = 0; i < NUM_IO_CHANNELS; ++i)
         {
-            trigger_channel(i, cnt);
+            trigger_channel(i);
+            // We trigger the next edge with a sligt delay, to (hopefully) achive some spacing between the interrupts
+            // This will not affect the overall period of this loop, since this is achived through an absolute delay interval
+            vTaskDelay(pdMS_TO_TICKS(100));
         }
     }
 }

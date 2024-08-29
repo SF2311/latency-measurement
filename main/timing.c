@@ -77,6 +77,7 @@ static void timing_task(void *arg)
         if (xQueueReceive(gpio_evt_queue, &delay, portMAX_DELAY))
         {
             ESP_LOGI(TAG, "GPIO intr, val: %d, took: %ld\n", gpio_get_level(delay.pin), delay.duration);
+            channel_gates[delay.pin].locked = false;
         try_send_data:
             if (send_data(client, &delay) == ESP_OK)
             {
@@ -102,7 +103,7 @@ void setup_timing()
     // disable interrupt
     io_conf.intr_type = GPIO_INTR_DISABLE;
     // set as output mode
-    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.mode = GPIO_MODE_INPUT_OUTPUT;
     // bit mask of the pins that you want to set,e.g.GPIO18/19
     io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
     // disable pull-down mode
